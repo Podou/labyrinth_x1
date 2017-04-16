@@ -1,7 +1,7 @@
 var MoveDirection = cc.Enum({
     NONE: 0,
     UP: 1,
-    DOWN: 2, 
+    DOWN: 2,
     LEFT: 3,
     RIGHT: 4
 });
@@ -34,6 +34,8 @@ cc.Class({
     onLoad: function () {
         var self = this;
         self._player = self.node.getChildByName('player');
+        self._initPlayer();
+        self._turnPlayer('back');
         if (! self._isMapLoaded) {
             self._player.active = false;
         }
@@ -47,7 +49,7 @@ cc.Class({
         }, self.node);
 
 
-    
+
     },
 
     restart: function() {
@@ -55,6 +57,7 @@ cc.Class({
         this._initMapPosition();
         this._curTile = this._startTile;
         this._updatePlayerPos();
+        this._turnPlayer('back');
     },
 
     start: function(err) {
@@ -65,11 +68,11 @@ cc.Class({
 
         // Init the map position
         self._initMapPosition();
-        
+
         // Init the succeed layer
         this._succeedLayer = this.node.getParent().getChildByName('successedLayer');
         this._succeedLayer.active = false;
-        
+
         // Init the player position
         self._tiledMap = self.node.getComponent(cc.TiledMap);
         cc.log(self._tiledMap);
@@ -101,6 +104,35 @@ cc.Class({
         this._isMapLoaded = true;
     },
 
+    _initPlayer: function(err) {
+        var self = this;
+        var playerTiled = self._player.getComponent(cc.TiledMap);
+        self._playerLayers = {};
+        self._playerLayers['back'] = playerTiled.getLayer('back');
+        self._playerLayers['front'] = playerTiled.getLayer('front');
+        self._playerLayers['right'] = playerTiled.getLayer('right');
+        self._playerLayers['left'] = playerTiled.getLayer('left');
+    },
+
+    _turnPlayer: function(direction) {
+        for (var i in this._playerLayers) {
+            var layer = this._playerLayers[i];
+            console.log('===', i, layer);
+            if (layer && layer.node) {
+                layer.node.active = false;
+            }
+        }
+        var directionLayer = this._playerLayers[direction];
+        if (directionLayer && directionLayer.node) {
+            directionLayer.node.active = true;
+            // var animal = directionLayer.node.getComponent(cc.Animation);
+            // cc.log(animal);
+            // if (animal) {
+            //     animal.play();
+            // }
+        }
+    },
+
     _initMapPosition: function() {
         this.node.setPosition(cc.visibleRect.bottomLeft);
     },
@@ -129,18 +161,22 @@ cc.Class({
             case cc.KEY.up:
                 newTile.y -= 1;
                 mapMoveDir = MoveDirection.DOWN;
+                this._turnPlayer('back');
                 break;
             case cc.KEY.down:
                 newTile.y += 1;
                 mapMoveDir = MoveDirection.UP;
+                this._turnPlayer('front');
                 break;
             case cc.KEY.left:
                 newTile.x -= 1;
                 mapMoveDir = MoveDirection.RIGHT;
+                this._turnPlayer('left');
                 break;
             case cc.KEY.right:
                 newTile.x += 1;
                 mapMoveDir = MoveDirection.LEFT;
+                this._turnPlayer('right');
                 break;
             default:
                 return;
